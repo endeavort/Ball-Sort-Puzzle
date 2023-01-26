@@ -16,6 +16,8 @@ SELECT_LEVEL_BUTTON = pygame.Rect(140, 260, 220, 50) # SELECT LEVELボタンの�
 MENU_BITTON = pygame.Rect(10, 10, 80, 40) # MENUボタンの座標
 RESTART_BUTTON = pygame.Rect(140, 170, 220, 50) # RESTARTボタンの座標
 CLOSE_BUTTON = pygame.Rect(360, 100, 40, 40) # ×ボタンの座標
+START_BUTTON = pygame.Rect(140, 460, 220, 70) # STARTボタンの座標
+
 # ============ 変数 ============
 tubes_num = 14   # 試験管の数
 tubes_list = [] # 試験管ごとの中身リスト
@@ -31,7 +33,7 @@ tubes_history = [] # 試験管ごとの中身のリスト記録（BACKボタン�
 clear_list = [] # 試験管ごとに同じ色が4つあるか確認するフラグのリスト
 
 # フェーズ
-phase = 1
+phase = 0
 # 0:タイトル
 # 1:ルール説明1
 # 2:ルール説明2
@@ -67,13 +69,15 @@ def click(pos):
     global selected, select_tube, select_ball, tubes_list, phase, tubes_num
     # タイトル画面
     if phase == 0:
-        pass
+        # マウスの選択座標とスタートの座標が重なったら
+        if START_BUTTON.collidepoint(pos):
+            phase = 1 # ルール説明画面1へ
     
     # ルール説明1画面
     elif phase == 1:
         # マウスのクリック時の座標とNEXTボタンの座標が重なったら
         if BACK_BUTTON.collidepoint(pos):
-            phase = 2 # ルール説明画面２へ
+            phase = 2 # ルール説明画面2へ
     
     # ルール説明2画面
     elif phase == 2:
@@ -165,7 +169,36 @@ def click(pos):
         # マウスのクリック時の座標とSELECT LEVELボタンの座標が重なったら
         if SELECT_LEVEL_BUTTON.collidepoint(pos):
             phase = 3 # レベル選択画面へ
-            
+
+def start():
+    # 背景
+    # ボールの描画
+    for i in range(13):
+        for j in range(14):
+                pygame.draw.circle(surface, random.choice(COLOR_LIST),(50 * i, 50 * j), 25)
+    
+    # ゲームタイトル
+    # 四角の描画
+    pygame.draw.rect(surface, "white", (50, 100, 400, 180), 0, 50)
+    pygame.draw.rect(surface, "black", (50, 100, 400, 180), 10, 50)
+    # 文字の設定
+    BALL_text = large_font.render("Ball", True, "black")
+    SORT_text = large_font.render("Sort", True, "black")
+    PUZZLE_text = large_font.render("Puzzle", True, "black")
+    # 文字の描画
+    surface.blit(BALL_text, (115, 130))
+    surface.blit(SORT_text, (265, 130))
+    surface.blit(PUZZLE_text, (150, 200))
+    
+    # STARTボタン
+    # 四角の描画
+    pygame.draw.rect(surface, "white", (130, 450, 240, 90))
+    pygame.draw.rect(surface, "red", START_BUTTON)
+    # 文字の設定
+    START_text = large_font.render("START", True, "white")
+    # 文字の描画
+    surface.blit(START_text, (150, 470))
+
 # ルール説明処理
 def rule():
     # 1ページ目
@@ -404,7 +437,7 @@ def main():
         
         # タイトル画面の時
         if phase == 0:
-            pass
+            start() # タイトル画面処理
         
         # ルール説明1,2の時
         elif phase == 1 or phase == 2:

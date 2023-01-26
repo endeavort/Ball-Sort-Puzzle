@@ -10,6 +10,7 @@ FPS = 10 # フレームレート
 COLOR_LIST = ["blue", "yellow", "red", "green", "purple", 
             "orange", "gray","olive","deeppink",'brown',
             "aqua","greenyellow"] # ボールの色リスト
+BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACKボタンの座標
 # ============ 変数 ============
 tubes_num = 14   # 試験管の数
 tubes_list = [] # 試験管ごとの中身リスト
@@ -21,6 +22,8 @@ tube_rects = [] # 試験管ごとの四角座標リスト
 selected = False # ボール選択中フラグ
 select_tube = None # 選択中の試験管のナンバー
 select_ball = None # 選択したボール
+tubes_history = [] # 試験管ごとの中身のリスト記録（BACKボタン用）
+
 
 pygame.init() # pygameの初期化処理
 pygame.display.set_caption("Ball Sort Puzzle")  # 枠上部に表示されるタイトル
@@ -121,10 +124,30 @@ def draw():
         # 選択中の時は緑色で囲む
         if  i == select_tube:
             pygame.draw.rect(surface, "lime", tube_rect, 3, 5)
+            
+    # ボタンの描画
+    # Backボタン
+    pygame.draw.rect(surface, "white", BACK_BUTTON)
+    # 文字の設定：render(描画する文字, 文字の境界をなめらかにするか,　色)
+    back_text = small_font.render("BACK", True, "black")
+    # 文字の描画：blit(render, 開始座標)
+    surface.blit(back_text, (415, 20))
 
 #　クリック処理
 def click(pos):
-    global selected, select_tube, select_ball
+    global selected, select_tube, select_ball, tubes_list
+    # マウスのクリック時の座標とBACKボタンが重なって、直前の記録があるとき
+    # ※ゲーム開始時以外の時
+    if BACK_BUTTON.collidepoint(pos) and tubes_history:
+        # 1つ前の試験管リストを呼び出し
+        tubes_list = tubes_history.pop(-1)
+        # 選択中フラグをFalseに
+        selected = False
+        # 選択中の試験管のナンバーを消す
+        select_tube = None
+        # 選択中のボールを消す
+        select_ball = None
+    
     # もしボールを選択中の時
     if selected:
         for i in range(len(tube_rects)):
@@ -132,6 +155,9 @@ def click(pos):
             if tube_rects[i].collidepoint(pos) and len(tubes_list[i]) != 4:
                 # 同じ試験管に戻す or 空の試験管 or 同じ色のボールの上だったら
                 if i ==  select_tube or len(tubes_list[i]) == 0 or tubes_list[i][-1] == select_ball:
+                    # 戻す時は直前の記録を取り消し
+                    if i == select_tube:
+                        tubes_history.pop(-1)
                     # 選択したボールをクリックした試験管の中に入れる
                     tubes_list[i].append(select_ball)
                     # 選択中フラグをFalseに
@@ -149,6 +175,8 @@ def click(pos):
                 selected = True
                 # 選択中の試験管のナンバーを記録
                 select_tube = i
+                # 現在の試験管リストを記録
+                tubes_history.append(copy.deepcopy(tubes_list))
                 # 一番上のボールを取り出す
                 select_ball = tubes_list[i].pop(-1)
         

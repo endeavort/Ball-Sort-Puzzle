@@ -10,7 +10,7 @@ FPS = 10 # フレームレート
 COLOR_LIST = ["blue", "yellow", "red", "green", "purple", 
             "orange", "gray","olive","deeppink",'brown',
             "aqua","greenyellow"] # ボールの色リスト
-BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACKボタンの座標
+BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACK（NEXT）ボタンの座標
 LEVEL_BUTTON = [pygame.Rect(50 + 100 * i, 200 + 110 * j, 80, 80) for j in range(4) for i in range(4)] # Levelボタンの座標
 SELECT_LEVEL_BUTTON = pygame.Rect(140, 260, 220, 50) # SELECT LEVELボタンの座標
 MENU_BITTON = pygame.Rect(10, 10, 80, 40) # MENUボタンの座標
@@ -31,7 +31,7 @@ tubes_history = [] # 試験管ごとの中身のリスト記録（BACKボタン�
 clear_list = [] # 試験管ごとに同じ色が4つあるか確認するフラグのリスト
 
 # フェーズ
-phase = 3
+phase = 1
 # 0:タイトル
 # 1:ルール説明1
 # 2:ルール説明2
@@ -71,11 +71,15 @@ def click(pos):
     
     # ルール説明1画面
     elif phase == 1:
-        pass
+        # マウスのクリック時の座標とNEXTボタンの座標が重なったら
+        if BACK_BUTTON.collidepoint(pos):
+            phase = 2 # ルール説明画面２へ
     
     # ルール説明2画面
     elif phase == 2:
-        pass
+        # マウスのクリック時の座標とNEXTボタンの座標が重なったら
+        if BACK_BUTTON.collidepoint(pos):
+            phase = 3 # レベル選択画面へ
     
     # レベル選択画面
     elif phase == 3:
@@ -161,6 +165,37 @@ def click(pos):
         # マウスのクリック時の座標とSELECT LEVELボタンの座標が重なったら
         if SELECT_LEVEL_BUTTON.collidepoint(pos):
             phase = 3 # レベル選択画面へ
+            
+# ルール説明処理
+def rule():
+    # 1ページ目
+    if phase == 1:
+        # 文字の設定
+        rule1text = "Move the ball to line up "
+        rule2text = "4 balls of the same color"
+        # 画像の設定
+        rule_image = pygame.image.load("image/rule1.png")
+    # 2ページ目
+    elif phase == 2:
+        # 文字の設定
+        rule1text = "you can only move on empty boxes"
+        rule2text = "or over the same color ball"
+        # 画像の設定
+        rule_image = pygame.image.load("image/rule2.png")
+    
+    # 文字の描画
+    rule1 = small_font.render(rule1text, True, "white")
+    rule2 = small_font.render(rule2text, True, "white")
+    surface.blit(rule1, (50, 100))
+    surface.blit(rule2, (50, 150))
+    
+    # 画像の描画
+    surface.blit(rule_image,(0, 250))
+    
+    # NEXTボタン
+    pygame.draw.rect(surface, "white", BACK_BUTTON, 3)
+    back_text = small_font.render("NEXT", True, "white")
+    surface.blit(back_text, (415, 20))
                     
 # 初期値処理
 def reset():
@@ -373,7 +408,7 @@ def main():
         
         # ルール説明1,2の時
         elif phase == 1 or phase == 2:
-            pass
+            rule() # ルール説明処理
 
         # レベル選択画面の時
         elif phase == 3:

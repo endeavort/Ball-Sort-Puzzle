@@ -13,6 +13,9 @@ COLOR_LIST = ["blue", "yellow", "red", "green", "purple",
 BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACKボタンの座標
 LEVEL_BUTTON = [pygame.Rect(50 + 100 * i, 200 + 110 * j, 80, 80) for j in range(4) for i in range(4)] # Levelボタンの座標
 SELECT_LEVEL_BUTTON = pygame.Rect(140, 260, 220, 50) # SELECT LEVELボタンの座標
+MENU_BITTON = pygame.Rect(10, 10, 80, 40) # MENUボタンの座標
+RESTART_BUTTON = pygame.Rect(140, 170, 220, 50) # RESTARTボタンの座標
+CLOSE_BUTTON = pygame.Rect(360, 100, 40, 40) # ×ボタンの座標
 # ============ 変数 ============
 tubes_num = 14   # 試験管の数
 tubes_list = [] # 試験管ごとの中身リスト
@@ -98,6 +101,10 @@ def click(pos):
             select_tube = None
             # 選択中のボールを消す
             select_ball = None
+            
+        # マウスのクリック時の座標とMENUボタンの座標が重なったら
+        if MENU_BITTON.collidepoint(pos):
+            phase = 5 # メニュー画面へ
         
         # もしボールを選択中の時
         if selected:
@@ -134,7 +141,20 @@ def click(pos):
                         select_ball = tubes_list[i].pop(-1)
     # メニュー画面
     elif phase == 5:
-        pass
+        # マウスのクリック時の座標とRESTARTボタンの座標が重なったら
+        if RESTART_BUTTON.collidepoint(pos):
+            # 試験管リストを最初に戻す
+            tubes_list = copy.deepcopy(origin_tube_list)
+            # プレイ画面へ
+            phase = 4
+        # マウスのクリック時の座標とSELECT LEVELボタンの座標が重なったら
+        elif SELECT_LEVEL_BUTTON.collidepoint(pos):
+            # レベル選択画面へ
+            phase = 3
+        # マウスのクリック時の座標と×ボタンの座標が重なったら
+        elif CLOSE_BUTTON.collidepoint(pos):
+            # プレイ画面へ 
+            phase = 4
     
     # クリア画面
     elif phase == 6:
@@ -289,6 +309,33 @@ def draw():
     # 文字の描画：blit(render, 開始座標)
     surface.blit(back_text, (415, 20))
     
+    # MENUボタン
+    # ボタンの描画
+    pygame.draw.rect(surface, "white", MENU_BITTON)
+    # 文字の設定：render(描画する文字, 文字の境界をなめらかにするか,　色)
+    menu_text = small_font.render("MENU", True, "black")
+    # 文字の描画：blit(render, 開始座標)
+    surface.blit(menu_text, (15, 20))
+    
+# メニュー処理
+def menu():
+    # メニュー枠の描画
+    pygame.draw.rect(surface, "red", (95, 95, 310, 260))
+    pygame.draw.rect(surface, "black", (100, 100, 300, 250))
+    # ボタンの描画
+    # RESTARTボタン
+    restart_text = small_font.render("R E S T A R T", True, "white")
+    surface.blit(restart_text, (175, 185))
+    pygame.draw.rect(surface, "white", RESTART_BUTTON, 3)
+    # SELECT LEVELボタン
+    select_level_text = small_font.render("SELECT LEVEL", True, "white")
+    surface.blit(select_level_text, (160, 275))
+    pygame.draw.rect(surface, "white", SELECT_LEVEL_BUTTON, 3)
+    # CLOSEボタン
+    pygame.draw.line(surface, "red", (395, 105), (375, 125), 3)
+    pygame.draw.line(surface, "red", (375, 105), (395, 125), 3)
+    pygame.draw.rect(surface, "black", CLOSE_BUTTON, 1)
+    
 # クリア画面
 def clear():
     # 最高レベルクリアの時
@@ -347,7 +394,8 @@ def main():
         
         # メニュー画面の時
         elif phase == 5:
-            pass
+            draw() # 描画処理
+            menu() # メニュー画面処理
             
         # クリア画面の時
         elif phase == 6:

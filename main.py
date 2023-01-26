@@ -124,6 +124,9 @@ def draw():
         # 選択中の時は緑色で囲む
         if  i == select_tube:
             pygame.draw.rect(surface, "lime", tube_rect, 3, 5)
+        # 全て揃った時は金色で囲む
+        if len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4:
+            pygame.draw.rect(surface, "gold", tube_rect, 5, 5)
             
     # ボタンの描画
     # Backボタン
@@ -171,14 +174,16 @@ def click(pos):
         for i in range(len(tube_rects)):
             # マウスの選択座標と試験管の座標が重なったら
             if tube_rects[i].collidepoint(pos):
-                # 選択中フラグをTrueに
-                selected = True
-                # 選択中の試験管のナンバーを記録
-                select_tube = i
-                # 現在の試験管リストを記録
-                tubes_history.append(copy.deepcopy(tubes_list))
-                # 一番上のボールを取り出す
-                select_ball = tubes_list[i].pop(-1)
+                # 試験管の中にボールがある時 and 同じ色が4つ揃ってなかったら
+                if 0 < len(tubes_list[i]) and not(len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4):
+                    # 選択中フラグをTrueに
+                    selected = True
+                    # 選択中の試験管のナンバーを記録
+                    select_tube = i
+                    # 現在の試験管リストを記録
+                    tubes_history.append(copy.deepcopy(tubes_list))
+                    # 一番上のボールを取り出す
+                    select_ball = tubes_list[i].pop(-1)
         
 # メイン関数
 def main():

@@ -18,6 +18,9 @@ adjust = 0 # 偶奇用調整数字
 line = 2 # 1列の試験管の数
 tube_x = 250 # 1本ごとの幅
 tube_rects = [] # 試験管ごとの四角座標リスト
+selected = False # ボール選択中フラグ
+select_tube = None # 選択中の試験管のナンバー
+select_ball = None # 選択したボール
 
 pygame.init() # pygameの初期化処理
 pygame.display.set_caption("Ball Sort Puzzle")  # 枠上部に表示されるタイトル
@@ -37,6 +40,9 @@ def check_event():
         # 終了処理:右上の「×」を押したらpygame終了
         if event.type == pygame.QUIT: 
             pygame.quit()
+        # クリック処理:クリックしたらその座標で処理を行う
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            click(event.pos)
             
 # ゲーム情報の初期化処理
 def init_game_info():
@@ -99,11 +105,45 @@ def draw():
     for i in range(line - adjust):
         for j in range(len(tubes_list[i + line])):
             pygame.draw.circle(surface, COLOR_LIST[tubes_list[i + line][j]],(37 + tube_x * i, 610 - (50 * j)), 25)
+    # 選択中のボールがある場合
+    if select_ball != None and select_tube != None:
+        # 1列目の時
+        if select_tube < line:
+             pygame.draw.circle(surface, COLOR_LIST[select_ball],(37 + tube_x * select_tube, 90), 25)
+        # 2列目の時
+        else:
+            pygame.draw.circle(surface, COLOR_LIST[select_ball],(37 + tube_x * (select_tube - line) , 385), 25)
     
     # 試験管の描画
     # 四角の描画:pygame.draw.rect(描画する画面, 色, 四角座標, 線の太さ, 角の丸み)
     for i, tube_rect in enumerate(tube_rects):
         pygame.draw.rect(surface, "white", tube_rect, 5, 3)
+        # 選択中の時は緑色で囲む
+        if  i == select_tube:
+            pygame.draw.rect(surface, "lime", tube_rect, 3, 5)
+
+#　クリック処理
+def click(pos):
+    global selected, select_tube, select_ball
+    # もしボールを選択中の時
+    if selected:
+        # 選択中フラグをFalseに
+        selected = False
+        # 選択中の試験管のナンバーを消す
+        select_tube = None
+        # 選択中のボールを消す
+        select_ball = None       
+    # 何も選択していない時
+    else:
+        for i in range(len(tube_rects)):
+            # マウスの選択座標と試験管の座標が重なったら
+            if tube_rects[i].collidepoint(pos):
+                # 選択中フラグをTrueに
+                selected = True
+                # 選択中の試験管のナンバーを記録
+                select_tube = i
+                # 一番上のボールを取り出す
+                select_ball = tubes_list[i].pop(-1)
         
 # メイン関数
 def main():

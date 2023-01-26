@@ -87,7 +87,7 @@ def click(pos):
                 tubes_num = 4 + i # レベルに応じて試験管の数を設定
                 init_game_info() # ゲーム初期化
                 phase = 4 # ゲーム画面へ
-                
+                pygame.draw.rect(surface, "black", (0, 0, WIDTH, HEIGHT)) # 残像バグ用
     # ゲーム画面
     elif phase == 4:
         # マウスのクリック時の座標とBACKボタンが重なって、直前の記録があるとき

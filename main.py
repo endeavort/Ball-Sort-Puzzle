@@ -11,6 +11,7 @@ COLOR_LIST = ["blue", "yellow", "red", "green", "purple",
             "orange", "gray","olive","deeppink",'brown',
             "aqua","greenyellow"] # ボールの色リスト
 BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACKボタンの座標
+LEVEL_BUTTON = [pygame.Rect(50 + 100 * i, 200 + 110 * j, 80, 80) for j in range(4) for i in range(4)] # Levelボタンの座標
 # ============ 変数 ============
 tubes_num = 14   # 試験管の数
 tubes_list = [] # 試験管ごとの中身リスト
@@ -24,6 +25,15 @@ select_tube = None # 選択中の試験管のナンバー
 select_ball = None # 選択したボール
 tubes_history = [] # 試験管ごとの中身のリスト記録（BACKボタン用）
 
+# フェーズ
+phase = 3
+# 0:タイトル
+# 1:ルール説明1
+# 2:ルール説明2
+# 3:レベル選択
+# 4:ゲーム画面
+# 5:メニュー画面
+# 6:クリア画面
 
 pygame.init() # pygameの初期化処理
 pygame.display.set_caption("Ball Sort Puzzle")  # 枠上部に表示されるタイトル
@@ -46,7 +56,121 @@ def check_event():
         # クリック処理:クリックしたらその座標で処理を行う
         if event.type == pygame.MOUSEBUTTONDOWN:
             click(event.pos)
-            
+
+#　クリック処理
+def click(pos):
+    global selected, select_tube, select_ball, tubes_list, phase, tubes_num
+    # タイトル画面
+    if phase == 0:
+        pass
+    
+    # ルール説明1画面
+    elif phase == 1:
+        pass
+    
+    # ルール説明2画面
+    elif phase == 2:
+        pass
+    
+    # レベル選択画面
+    elif phase == 3:
+        # 初期値処理
+        reset()
+        for i in range(len(LEVEL_BUTTON) - 1):    
+            # マウスのクリック時の座標とLevelボタンの座標が重なったら
+            if LEVEL_BUTTON[i].collidepoint(pos):
+                tubes_num = 4 + i # レベルに応じて試験管の数を設定
+                init_game_info() # ゲーム初期化
+                phase = 4 # ゲーム画面へ
+                
+    # ゲーム画面
+    elif phase == 4:
+        # マウスのクリック時の座標とBACKボタンが重なって、直前の記録があるとき
+        # ※ゲーム開始時以外の時
+        if BACK_BUTTON.collidepoint(pos) and tubes_history:
+            # 1つ前の試験管リストを呼び出し
+            tubes_list = tubes_history.pop(-1)
+            # 選択中フラグをFalseに
+            selected = False
+            # 選択中の試験管のナンバーを消す
+            select_tube = None
+            # 選択中のボールを消す
+            select_ball = None
+        
+        # もしボールを選択中の時
+        if selected:
+            for i in range(len(tube_rects)):
+                # マウスのクリック時の座標と試験管が重なって、その中のボールが3つ以下だったら
+                if tube_rects[i].collidepoint(pos) and len(tubes_list[i]) != 4:
+                    # 同じ試験管に戻す or 空の試験管 or 同じ色のボールの上だったら
+                    if i ==  select_tube or len(tubes_list[i]) == 0 or tubes_list[i][-1] == select_ball:
+                        # 戻す時は直前の記録を取り消し
+                        if i == select_tube:
+                            tubes_history.pop(-1)
+                        # 選択したボールをクリックした試験管の中に入れる
+                        tubes_list[i].append(select_ball)
+                        # 選択中フラグをFalseに
+                        selected = False
+                        # 選択中の試験管のナンバーを消す
+                        select_tube = None
+                        # 選択中のボールを消す
+                        select_ball = None     
+        # 何も選択していない時
+        else:
+            for i in range(len(tube_rects)):
+                # マウスの選択座標と試験管の座標が重なったら
+                if tube_rects[i].collidepoint(pos):
+                    # 試験管の中にボールがある時 and 同じ色が4つ揃ってなかったら
+                    if 0 < len(tubes_list[i]) and not(len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4):
+                        # 選択中フラグをTrueに
+                        selected = True
+                        # 選択中の試験管のナンバーを記録
+                        select_tube = i
+                        # 現在の試験管リストを記録
+                        tubes_history.append(copy.deepcopy(tubes_list))
+                        # 一番上のボールを取り出す
+                        select_ball = tubes_list[i].pop(-1)
+    # メニュー画面
+    elif phase == 5:
+        pass
+    
+    # クリア画面
+    elif phase == 6:
+        pass
+                    
+# 初期値処理
+def reset():
+    global tubes_list, tubes_history, tube_rects, select_tube, selected, select_ball
+    tubes_list = []
+    tubes_history = []
+    tube_rects = []
+    select_tube = None
+    selected = False
+    select_ball = None 
+
+# レベル選択画面
+def select_level():
+    # 文字の設定
+    text = small_font.render("Please select a level", True, "white")
+    # 文字の描画
+    surface.blit(text, (50, 100))
+    # LEVELボタンの描画
+    for i in range(11):
+        pygame.draw.rect(surface, "white", LEVEL_BUTTON[i], 3)
+    level = 1
+    for i in range(3):
+        for j in range(4):
+            # レベルごと文字の設定
+            level_text = large_font.render(f"{level}", True, "white")
+            # レベルごと文字の描画
+            if level < 10:
+                surface.blit(level_text, (75 + 100 * j, 215 + 110 * i))
+            elif level == 12:
+                pass
+            else:
+                surface.blit(level_text, (60 + 100 * j, 215 + 110 * i))
+            level += 1
+        
 # ゲーム情報の初期化処理
 def init_game_info():
     global tubes_list, origin_tube_list, adjust, line, tube_x, tube_rects
@@ -95,6 +219,28 @@ def init_game_info():
         # 試験管の描画座標をリストに追加
         tube_rects.append(box)
         
+
+    # 文字の設定
+    text = small_font.render("Please select a level", True, "white")
+    # 文字の描画
+    surface.blit(text, (50, 100))
+    # LEVELボタンの描画
+    for i in range(11):
+        pygame.draw.rect(surface, "white", LEVEL_BUTTON[i], 3)
+    level = 1
+    for i in range(3):
+        for j in range(4):
+            # レベルごと文字の設定
+            level_text = large_font.render(f"{level}", True, "white")
+            # レベルごと文字の描画
+            if level < 10:
+                surface.blit(level_text, (75 + 100 * j, 215 + 110 * i))
+            elif level == 12:
+                pass
+            else:
+                surface.blit(level_text, (60 + 100 * j, 215 + 110 * i))
+            level += 1
+        
 # ゲーム描画処理
 def draw():
     # ボールの描画
@@ -136,66 +282,36 @@ def draw():
     # 文字の描画：blit(render, 開始座標)
     surface.blit(back_text, (415, 20))
 
-#　クリック処理
-def click(pos):
-    global selected, select_tube, select_ball, tubes_list
-    # マウスのクリック時の座標とBACKボタンが重なって、直前の記録があるとき
-    # ※ゲーム開始時以外の時
-    if BACK_BUTTON.collidepoint(pos) and tubes_history:
-        # 1つ前の試験管リストを呼び出し
-        tubes_list = tubes_history.pop(-1)
-        # 選択中フラグをFalseに
-        selected = False
-        # 選択中の試験管のナンバーを消す
-        select_tube = None
-        # 選択中のボールを消す
-        select_ball = None
-    
-    # もしボールを選択中の時
-    if selected:
-        for i in range(len(tube_rects)):
-            # マウスのクリック時の座標と試験管が重なって、その中のボールが3つ以下だったら
-            if tube_rects[i].collidepoint(pos) and len(tubes_list[i]) != 4:
-                # 同じ試験管に戻す or 空の試験管 or 同じ色のボールの上だったら
-                if i ==  select_tube or len(tubes_list[i]) == 0 or tubes_list[i][-1] == select_ball:
-                    # 戻す時は直前の記録を取り消し
-                    if i == select_tube:
-                        tubes_history.pop(-1)
-                    # 選択したボールをクリックした試験管の中に入れる
-                    tubes_list[i].append(select_ball)
-                    # 選択中フラグをFalseに
-                    selected = False
-                    # 選択中の試験管のナンバーを消す
-                    select_tube = None
-                    # 選択中のボールを消す
-                    select_ball = None     
-    # 何も選択していない時
-    else:
-        for i in range(len(tube_rects)):
-            # マウスの選択座標と試験管の座標が重なったら
-            if tube_rects[i].collidepoint(pos):
-                # 試験管の中にボールがある時 and 同じ色が4つ揃ってなかったら
-                if 0 < len(tubes_list[i]) and not(len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4):
-                    # 選択中フラグをTrueに
-                    selected = True
-                    # 選択中の試験管のナンバーを記録
-                    select_tube = i
-                    # 現在の試験管リストを記録
-                    tubes_history.append(copy.deepcopy(tubes_list))
-                    # 一番上のボールを取り出す
-                    select_ball = tubes_list[i].pop(-1)
-        
 # メイン関数
 def main():
-    
-    init_game_info() # ゲーム初期化処理
-    
     while True:
         surface.fill("black")  # 背景を黒にする
 
         check_event() # イベントチェック処理（終了、マウス入力）を実行
         
-        draw()
+        # タイトル画面の時
+        if phase == 0:
+            pass
+        
+        # ルール説明1,2の時
+        elif phase == 1 or phase == 2:
+            pass
+
+        # レベル選択画面の時
+        elif phase == 3:
+            select_level()
+        
+        # ゲーム画面の時
+        elif phase == 4:
+            draw() # 描画処理
+        
+        # メニュー画面の時
+        elif phase == 5:
+            pass
+            
+        # クリア画面の時
+        elif phase == 6:
+            pass
 
         pygame.display.flip() # 画面更新処理
         clock.tick(FPS) # フレームレートの設定

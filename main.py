@@ -127,12 +127,19 @@ def click(pos):
     global selected, select_tube, select_ball
     # もしボールを選択中の時
     if selected:
-        # 選択中フラグをFalseに
-        selected = False
-        # 選択中の試験管のナンバーを消す
-        select_tube = None
-        # 選択中のボールを消す
-        select_ball = None       
+        for i in range(len(tube_rects)):
+            # マウスのクリック時の座標と試験管が重なって、その中のボールが3つ以下だったら
+            if tube_rects[i].collidepoint(pos) and len(tubes_list[i]) != 4:
+                # 同じ試験管に戻す or 空の試験管 or 同じ色のボールの上だったら
+                if i ==  select_tube or len(tubes_list[i]) == 0 or tubes_list[i][-1] == select_ball:
+                    # 選択したボールをクリックした試験管の中に入れる
+                    tubes_list[i].append(select_ball)
+                    # 選択中フラグをFalseに
+                    selected = False
+                    # 選択中の試験管のナンバーを消す
+                    select_tube = None
+                    # 選択中のボールを消す
+                    select_ball = None     
     # 何も選択していない時
     else:
         for i in range(len(tube_rects)):

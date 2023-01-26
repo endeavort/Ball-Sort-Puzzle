@@ -12,6 +12,7 @@ COLOR_LIST = ["blue", "yellow", "red", "green", "purple",
             "aqua","greenyellow"] # ボールの色リスト
 BACK_BUTTON = pygame.Rect(410, 10, 80, 40) # BACKボタンの座標
 LEVEL_BUTTON = [pygame.Rect(50 + 100 * i, 200 + 110 * j, 80, 80) for j in range(4) for i in range(4)] # Levelボタンの座標
+SELECT_LEVEL_BUTTON = pygame.Rect(140, 260, 220, 50) # SELECT LEVELボタンの座標
 # ============ 変数 ============
 tubes_num = 14   # 試験管の数
 tubes_list = [] # 試験管ごとの中身リスト
@@ -24,6 +25,7 @@ selected = False # ボール選択中フラグ
 select_tube = None # 選択中の試験管のナンバー
 select_ball = None # 選択したボール
 tubes_history = [] # 試験管ごとの中身のリスト記録（BACKボタン用）
+clear_list = [] # 試験管ごとに同じ色が4つあるか確認するフラグのリスト
 
 # フェーズ
 phase = 3
@@ -118,7 +120,7 @@ def click(pos):
         # 何も選択していない時
         else:
             for i in range(len(tube_rects)):
-                # マウスの選択座標と試験管の座標が重なったら
+                # マウスのクリック時の座標と試験管が重なったら
                 if tube_rects[i].collidepoint(pos):
                     # 試験管の中にボールがある時 and 同じ色が4つ揃ってなかったら
                     if 0 < len(tubes_list[i]) and not(len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4):
@@ -136,17 +138,20 @@ def click(pos):
     
     # クリア画面
     elif phase == 6:
-        pass
+        # マウスのクリック時の座標とSELECT LEVELボタンの座標が重なったら
+        if SELECT_LEVEL_BUTTON.collidepoint(pos):
+            phase = 3 # レベル選択画面へ
                     
 # 初期値処理
 def reset():
-    global tubes_list, tubes_history, tube_rects, select_tube, selected, select_ball
+    global tubes_list, tubes_history, tube_rects, select_tube, selected, select_ball, clear_list
     tubes_list = []
     tubes_history = []
     tube_rects = []
     select_tube = None
     selected = False
-    select_ball = None 
+    select_ball = None
+    clear_list = []
 
 # レベル選択画面
 def select_level():
@@ -180,6 +185,8 @@ def init_game_info():
     for i in range(tubes_num):
         # 試験管の数だけ空のリストを作成
         tubes_list.append([]) 
+        # 試験管の数だけクリアリスト（初期値はFalse）を作成
+        clear_list.append(False)
         # ボールの種類 × 4回分を振り分けリストに追加
         # ※2つの試験管は空にするので、ボールの種類数 = 総試験管数 - 2）
         if i < tubes_num - 2:
@@ -273,17 +280,41 @@ def draw():
         # 全て揃った時は金色で囲む
         if len(set(tubes_list[i])) == 1 and len(tubes_list[i]) == 4:
             pygame.draw.rect(surface, "gold", tube_rect, 5, 5)
-            
+    
+    # Backボタン  
     # ボタンの描画
-    # Backボタン
     pygame.draw.rect(surface, "white", BACK_BUTTON)
     # 文字の設定：render(描画する文字, 文字の境界をなめらかにするか,　色)
     back_text = small_font.render("BACK", True, "black")
     # 文字の描画：blit(render, 開始座標)
     surface.blit(back_text, (415, 20))
+    
+# クリア画面
+def clear():
+    # 最高レベルクリアの時
+    if tubes_num == 14:
+        # 画像の設定
+        img = pygame.image.load("image/complete.png")
+        # 画像の描画
+        surface.blit(img, (95, 95))
+    # 最高レベル以外クリアの時
+    else:
+        # 画像の設定
+        img = pygame.image.load("image/clear.png")
+        # 画像の描画
+        surface.blit(img, (85, 95))
+        
+        # SELECT LEVELボタン
+        # ボタンの描画
+        pygame.draw.rect(surface, "red", SELECT_LEVEL_BUTTON)
+        # 文字の設定
+        select_level_text = small_font.render("SELECT LEVEL", True, "white")
+        # 文字の描画
+        surface.blit(select_level_text, (160, 275))
 
 # メイン関数
 def main():
+    global phase, clear_list
     while True:
         surface.fill("black")  # 背景を黒にする
 
@@ -299,11 +330,20 @@ def main():
 
         # レベル選択画面の時
         elif phase == 3:
-            select_level()
+            select_level() # レベル選択画面処理
         
         # ゲーム画面の時
         elif phase == 4:
             draw() # 描画処理
+            for i, tube in enumerate(tubes_list):
+                # セット型にしたときに要素数が1 and 試験管の要素数が4の時
+                # ※list → setにすると重複する値は消える
+                if len(set(tube)) == 1 and len(tube) == 4:
+                    # 試験管のクリアフラグをTrueにする
+                    clear_list[i] = True
+            # 試験管のクリアフラグのFalse数が2になったらクリア画面へ
+            if clear_list.count(False) == 2:
+                phase = 6
         
         # メニュー画面の時
         elif phase == 5:
@@ -311,7 +351,8 @@ def main():
             
         # クリア画面の時
         elif phase == 6:
-            pass
+            draw() # 描画処理
+            clear() # クリア画面処理
 
         pygame.display.flip() # 画面更新処理
         clock.tick(FPS) # フレームレートの設定
